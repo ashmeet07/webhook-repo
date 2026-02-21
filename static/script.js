@@ -1,49 +1,40 @@
 let page = 1;
 
 async function loadEvents() {
+    const feed = document.getElementById("feed");
 
     try {
         const res = await fetch(`/events?page=${page}`);
         const data = await res.json();
 
-        const feed = document.getElementById("feed");
         feed.innerHTML = "";
 
         if (data.length === 0) {
-            feed.innerHTML = "<p class='empty'>No more events</p>";
+            feed.innerHTML = `<div class="log-entry">No activity yet...</div>`;
             return;
         }
 
         data.forEach(event => {
 
             let text = "";
-            let cssClass = "card";
 
             if (event.action === "PUSH") {
-                text = `📌 ${event.author} pushed to ${event.to_branch}`;
-                cssClass += " push";
+                text = `"${event.author}" pushed to "${event.to_branch}" on ${event.timestamp}`;
             }
 
-            if (event.action === "PULL_REQUEST") {
-                text = `🔁 ${event.author} opened PR ${event.from_branch} → ${event.to_branch}`;
-                cssClass += " pr";
+            else if (event.action === "PULL_REQUEST") {
+                text = `"${event.author}" opened a pull request from "${event.from_branch}" to "${event.to_branch}" on ${event.timestamp}`;
             }
 
-            if (event.action === "MERGE") {
-                text = `✅ ${event.author} merged ${event.from_branch} → ${event.to_branch}`;
-                cssClass += " merge";
+            else if (event.action === "MERGE") {
+                text = `"${event.author}" merged branch "${event.from_branch}" into "${event.to_branch}" on ${event.timestamp}`;
             }
 
-            feed.innerHTML += `
-                <div class="${cssClass}">
-                    <div>${text}</div>
-                    <div class="meta">${event.timestamp}</div>
-                </div>
-            `;
+            feed.innerHTML += `<div class="log-entry">${text}</div>`;
         });
 
     } catch (err) {
-        console.error("Error loading events:", err);
+        feed.innerHTML = `<div class="log-entry">Error loading events...</div>`;
     }
 }
 
@@ -60,22 +51,3 @@ function prevPage() {
 }
 
 loadEvents();
-
-/* ✅ Theme Toggle */
-
-const toggle = document.getElementById("themeToggle");
-
-function setTheme(theme) {
-    document.body.className = theme;
-    localStorage.setItem("theme", theme);
-    toggle.checked = theme === "light";
-}
-
-toggle.addEventListener("change", () => {
-    setTheme(toggle.checked ? "light" : "dark");
-});
-
-/* ✅ Load Saved Theme */
-
-const savedTheme = localStorage.getItem("theme") || "dark";
-setTheme(savedTheme);
